@@ -23,6 +23,7 @@ int get_priority(char symbol){
     if (symbol == '+' || symbol == '-') return 2;
     if (symbol == '*' || symbol == '/' || symbol == '%') return 3;
     if (symbol == '^') return 4;
+    if (symbol == '~') return 6;
     return 5;
 }
 
@@ -88,12 +89,20 @@ status scan_string(FILE* file, char** string){
         symbol = fgetc(file);
     }
     (*string)[index] = '\0';
-    (*string) = realloc((*string), sizeof(char)* index+1);
+    char* ptr = realloc((*string), sizeof(char)* index+1);
+    if (!ptr){
+        free(*string);
+        return allocation_error;
+    }
+    *string = ptr;
     if (symbol == EOF) return end;
     return ok;
 }
 
 status to_polish(char* string, char** polish){
+    if (!isdigit(string[0])){
+        if (string[0] != '-') return wrong_symbol;
+    }
     int length = strlen(string);
     *polish = (char*)malloc(sizeof(char) * length * 2);
     if (!(*polish)) return allocation_error;
@@ -132,6 +141,12 @@ status to_polish(char* string, char** polish){
             i++;
         }
         else if (string[i] != '\0'){
+            if (string[i] == '-' && i == 0 || string[i] == '-' && string[i-1] == '('){
+                string[i] = '~';
+            }
+            else if (i!= 0 && is_operand(string[i-1])){
+                return wrong_symbol;
+            }
             if (stack == NULL || (get_priority(stack->data) < get_priority(string[i]))){
                 if (push(&stack, string[i]) == allocation_error){
                     delete_stack(&stack);
@@ -179,22 +194,26 @@ status calculate(const char* string, int* answer){
     int number2, number1;
     char operand;
     Stack* stack = NULL;
-    
     for (int i = 0; i < length; i++){
         if (isdigit(string[i])){
             number = number * 10 + (string[i] - '0');
         }
         else if (string[i] == ' ' && isdigit(string[i-1])){
             if (push(&stack, number) == allocation_error){
-                        delete_stack(&stack);
-                        return allocation_error;
-                    }
+                delete_stack(&stack);
+                return allocation_error;
+            }
             number = 0;
         }
         else if (string[i] == ' ') continue;
         else {
-            number1 = pop(&stack);
-            number2 = pop(&stack);
+            if (stack->next == NULL){
+                number1 = pop(&stack);
+            }
+            else{
+                number1 = pop(&stack);
+                number2 = pop(&stack);
+            }
             switch(string[i]){
                 case '-':
                     if (push(&stack, number2 - number1) == allocation_error){
@@ -228,7 +247,27 @@ status calculate(const char* string, int* answer){
                     break;
                 case '^':
                     if (number < 0) return wrong_power;
+                    if (number1==0 && number2==0) {
+                        return wrong_power;
+                    }
                     if (push(&stack, my_pow(number2, number1)) == allocation_error){
+                        delete_stack(&stack);
+                        return allocation_error;
+                    }
+                    break;
+                case '~':
+                    if (i == 0){
+                        if (push(&stack, number1) == allocation_error){
+                            delete_stack(&stack);
+                            return allocation_error;
+                        }
+                        break;
+                    }
+                    if (push(&stack, number2) == allocation_error){
+                        delete_stack(&stack);
+                        return allocation_error;
+                    }
+                    if (push(&stack, -number1) == allocation_error){
                         delete_stack(&stack);
                         return allocation_error;
                     }
@@ -243,7 +282,7 @@ status calculate(const char* string, int* answer){
 void error_file(char* filename){
     char* new;
     new = strtok(filename, ".");
-    strcat(new ,"_errors.txt\0");
+    strcat(new ,"_errors.txt");
     return;
 }
 
@@ -271,6 +310,7 @@ int main(int argc, char* argv[]){
     status answer_flag;
     status polish_flag;
     FILE* out = NULL;
+    int string_length, polish_length;
     int strnumber;
     for (int filenumber = 1; filenumber < argc; filenumber++){
         FILE* file = fopen(argv[filenumber], "r");
@@ -303,6 +343,10 @@ int main(int argc, char* argv[]){
                         strcpy(filename, argv[filenumber]);
                         error_file(filename);
                         out = fopen(filename, "w");
+                        if (!out){
+                            printf("File did not open");
+                            return -2;
+                        }
                     }
                     fprintf(out, "in string %d detected wrong symbol\n", strnumber);
                 }
@@ -311,6 +355,10 @@ int main(int argc, char* argv[]){
                         strcpy(filename, argv[filenumber]);
                         error_file(filename);
                         out = fopen(filename, "w");
+                        if (!out){
+                            printf("File did not open");
+                            return -2;
+                        }
                     }
                     fprintf(out, "in string %d detected wrong bracket balance\n", strnumber);
                 }
@@ -327,12 +375,26 @@ int main(int argc, char* argv[]){
                                 strcpy(filename, argv[filenumber]);
                                 error_file(filename);
                                 out = fopen(filename, "w");
+                                if (!out){
+                                    printf("File did not open");
+                                    return -2;
+                                }
                             }
                             fprintf(out, "in string %d detected wrong power\n", strnumber);
+                            break;
                         case ok:
+                            string_length = strlen(string);
+                            polish_length = strlen(polish);
+                            for (int i = 0; i < string_length; i++){
+                                if (string[i] == '~') string[i] = '-';
+                            }
+                            for (int i = 0; i < polish_length; i++){
+                                if (polish[i] == '~') polish[i] = '-';
+                            }
                             printf("Expression: %s\n", string);
                             printf("In polish: %s\n", polish);
                             printf("Result: %d\n\n", answer);
+                            break;
                     }
                 }
             }
