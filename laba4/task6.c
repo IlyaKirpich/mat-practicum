@@ -231,7 +231,9 @@ status postfix_to_tree(const char* postfix, Tree** tree, char** variables, int* 
     Tree* new = NULL;
     int variables_capacity = 2;
     *variables = (char*)malloc(sizeof(char)* variables_capacity);
-    
+    if (*variables) {
+        return allocation_error;
+    }
     int variable_amount = 0;
     bool flag = 1;
     for (int i = 0; i < length; i++){
@@ -341,6 +343,9 @@ status calculate_tree(const Tree* tree, int* vector, const char* variables, cons
         return ok;
     }
     int* answer = (int*)malloc(sizeof(int));
+    if (!(*answer)){
+        return allocation_error;
+    }
     int a = *(int*)pop(stack);
     int b = 0;
     if (tree->value != '~')
@@ -420,6 +425,10 @@ int main(int argc, char* argv[]){
         return -2;
     }
     char* filename = (char*)malloc(sizeof(char)* 15);
+    if (!filename){
+        printf("Allocation error");
+        return allocation_error;
+    }
     gener_filename(filename);
     FILE* file = fopen(filename, "w");
     if (!file){
