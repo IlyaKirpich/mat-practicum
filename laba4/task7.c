@@ -224,6 +224,7 @@ status string_processing(char* string0, MemoryCell*** vector, int* cells_amount,
                 return wrong_string;
             }
             (*vector)[index]->value = (*vector)[index]->value;
+            free(string);
             return ok;
         }
         index2 = dichotomy_search(*vector, *cells_amount, string);
@@ -262,24 +263,28 @@ status string_processing(char* string0, MemoryCell*** vector, int* cells_amount,
         }
         if (index2 == -1){
             (*vector)[index]->value = calculation(number, (*vector)[index3]->value, operand);
+            free(string);
             return ok;
         }
         (*vector)[index]->value = calculation(number, (*vector)[index3]->value, operand);
+        free(string);
         return ok;
     }
+    free(string);
     return ok;
 }
 
 void delete_vector(MemoryCell*** vector, const int cells_amount, char** string){
     for (int i = 0; i < cells_amount; i++){
         free((*vector)[i]->name);
+        free((*vector)[i]);
     }
     free(*vector);
     free(*string);
 }
 
 int main(int argc, char* argv[]){
-    if (argc != 3){
+    if (argc != 2){
         printf("Wrong amount of arguments");
         return wrong_arguments_amount;
     }
