@@ -3,6 +3,7 @@
 #include <ctype.h>
 #include <string.h>
 #include <stdbool.h>
+#include <time.h>
 
 typedef struct Tree{
     int value;
@@ -29,8 +30,6 @@ int get_priority(const char a){
     if (a == '(' || a == ')') return 1;
     return 0;
 }
-
-
 
 status push(Stack** stack, void* value){
     Stack* new = (Stack*)malloc(sizeof(Stack));
@@ -109,6 +108,7 @@ status scan_string(FILE* file, char** string){
         return allocation_error;
     }
     *string = ptr;
+    if (strlen(*string) == 0) return wrong_string;
     return ok;
 }
 
@@ -231,6 +231,7 @@ status postfix_to_tree(const char* postfix, Tree** tree, char** variables, int* 
     Tree* new = NULL;
     int variables_capacity = 2;
     *variables = (char*)malloc(sizeof(char)* variables_capacity);
+    
     int variable_amount = 0;
     bool flag = 1;
     for (int i = 0; i < length; i++){
@@ -293,19 +294,19 @@ int calculation(const int a, const int b, const char operation){
         case '|':
             return a | b;
         case '~':
-            return ~b;
+            return !b;
         case '-':
-            return ~a | b;
+            return !a | b;
         case '+':
-            return ~(~a | b);
+            return !(!a | b);
         case '<':
             return a^b;
         case '=':
             return a==b;
         case '!':
-            return ~(a & b);
+            return !(a & b);
         case '?':
-            return ~(a | b);
+            return !(a | b);
     }
 }
 
@@ -385,6 +386,7 @@ status enumeration(const Tree* tree, const int variables_amount, const char* var
 }
 
 void gener_filename(char *filename) {
+    srand(time(NULL));
     int size = rand() % 10 + 1;
     char result[size];
     for (int i = 0; i < size;) {
@@ -470,6 +472,4 @@ int main(int argc, char* argv[]){
     }
     delete(in, file, string, postfix, variables, tree);
     return 0;
-    //printf("\n%s", postfix);
-    //print_tree(tree, 0);
 }

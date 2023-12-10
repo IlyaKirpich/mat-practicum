@@ -101,7 +101,9 @@ status scan_string(FILE* file, char** string){
 
 status to_polish(char* string, char** polish){
     if (!isdigit(string[0])){
-        if (string[0] != '-') return wrong_symbol;
+        if (string[0] != '-' && string[0] != '(') {
+            return wrong_symbol;
+        }
     }
     int length = strlen(string);
     *polish = (char*)malloc(sizeof(char) * length * 2);
@@ -144,7 +146,7 @@ status to_polish(char* string, char** polish){
             if (string[i] == '-' && i == 0 || string[i] == '-' && string[i-1] == '('){
                 string[i] = '~';
             }
-            else if (i!= 0 && is_operand(string[i-1])){
+            else if (i!= 0 && is_operand(string[i-1]) && string[i-1] != ')'){
                 return wrong_symbol;
             }
             if (stack == NULL || (get_priority(stack->data) < get_priority(string[i]))){
@@ -183,7 +185,7 @@ int my_pow (int base, int power) {
     if (power == 0) return 1;
     if (power % 2 == 1) return my_pow(base, power - 1) * base;
     else {
-        double result = my_pow(base, power / 2);
+        int result = my_pow(base, power / 2);
         return result * result;
     }
 }
@@ -349,7 +351,7 @@ int main(int argc, char* argv[]){
                         }
                     }
                     fprintf(out, "in string %d detected wrong symbol\n", strnumber);
-                }
+                } 
                 else if (polish_flag == wrong_balance){
                     if (!out){
                         strcpy(filename, argv[filenumber]);
