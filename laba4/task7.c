@@ -13,7 +13,9 @@ typedef enum{
     allocation_error,
     end,
     variable,
-    wrong_string
+    wrong_string,
+    wrong_arguments_amount,
+    wrong_file
 } status;
 
 status new_cell(char* name, MemoryCell** new){
@@ -274,7 +276,15 @@ void delete_vector(MemoryCell*** vector, const int cells_amount, char** string){
 }
 
 int main(int argc, char* argv[]){
-    FILE* file = fopen("blabla.txt", "r");
+    if (argc != 3){
+        printf("Wrong amount of arguments");
+        return wrong_arguments_amount;
+    }
+    FILE* file = fopen(argv[1], "r");
+    if (!file){
+        printf("File did not open");
+        return wrong_file;
+    }
     char* string = NULL;
     MemoryCell** vector = (MemoryCell**)malloc(sizeof(MemoryCell*) * 2);
     int cells_amount = 0;
@@ -313,5 +323,6 @@ int main(int argc, char* argv[]){
             delete_vector(&vector, cells_amount, &string);
             break;
     }
+    fclose(file);
     return 0;
 }
