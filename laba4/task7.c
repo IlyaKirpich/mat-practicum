@@ -123,6 +123,9 @@ status scan_command(char** ptr, char** string){
     int capacity = 2;
     int length = 0;
     *string = (char*)malloc(sizeof(char) * capacity);
+    if (!(*string)){
+        return allocation_error;
+    }
     while (isalpha(**ptr)){
         ++length;
         if (length + 1 == capacity){
