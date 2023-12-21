@@ -51,27 +51,19 @@ enum factorial_status_codes
     fsc_invalid_parameter
 };
 
-enum factorial_status_codes factorial(int value, long *result)
-{
+enum factorial_status_codes factorial(int value, long *result){
     enum factorial_status_codes recursive_status_code;
-
-    if (value > 20)
-    {
+    if (value > 20){
         return fsc_invalid_parameter;
     }
-
-    if (value == 0 || value == 1)
-    {
+    if (value == 0 || value == 1){
         *result = 1;
         return fsc_ok;
     }
-
     recursive_status_code = factorial(value - 1, result);
-    if (recursive_status_code == fsc_ok)
-    {
+    if (recursive_status_code == fsc_ok){
         *result *= value;
     }
-
     return recursive_status_code;
 }
 
