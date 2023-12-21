@@ -21,7 +21,9 @@ enum prime_number_status_codes
 enum prime_number_status_codes prime_number(int value){
     if (value < 2)
         return pnsc_one;
-    for (int i = 2; i < value; ++i){
+    if (value == 2)
+        return pnsc_notprime;
+    for (int i = 3; i < value; i+=2){
         if (value % i != 0)
             continue;
         return pnsc_notprime;
